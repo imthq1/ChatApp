@@ -1,0 +1,158 @@
+/* Định dạng tổng thể */
+.chat-container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(to right, #eef2f3, #f5f7fa);
+  font-family: "Arial", sans-serif;
+}
+
+/* Header chat */
+.chat-header {
+  background: linear-gradient(135deg, #4a90e2, #357abd);
+  color: white;
+  padding: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 10px;
+}
+
+.chat-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+/* Khu vực tin nhắn */
+.chat-messages {
+  flex: 1;
+  padding: 1rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  background: #ffffff;
+  border-radius: 10px;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.05);
+}
+
+/* Tin nhắn chung */
+.message {
+  max-width: 70%;
+  padding: 0.8rem 1rem;
+  border-radius: 12px;
+  position: relative;
+  font-size: 1rem;
+  transition: all 0.3s ease-in-out;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+/* Hiệu ứng xuất hiện tin nhắn */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Tin nhắn nhận */
+.message-received {
+  background: #ffffff;
+  align-self: flex-start;
+  border-bottom-left-radius: 5px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Tin nhắn gửi */
+.message-sent {
+  background: #4a90e2;
+  color: white;
+  align-self: flex-end;
+  border-bottom-right-radius: 5px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+/* Thông tin tin nhắn */
+.message-info {
+  font-size: 0.8rem;
+  margin-bottom: 0.2rem;
+  color: #666;
+  font-style: italic;
+}
+
+.message-sent .message-info {
+  color: #e6e6e6;
+}
+
+/* Khung nhập tin nhắn */
+.chat-input-container {
+  padding: 1rem;
+  background: white;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+}
+
+.chat-input-form {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+/* Input nhập tin nhắn */
+.chat-input {
+  flex: 1;
+  padding: 0.8rem;
+  border: 1px solid #ddd;
+  border-radius: 2rem;
+  outline: none;
+  transition: all 0.3s ease;
+  font-size: 1rem;
+}
+
+.chat-input:focus {
+  border-color: #4a90e2;
+  box-shadow: 0 0 8px rgba(74, 144, 226, 0.3);
+}
+
+/* Nút gửi tin nhắn */
+.send-button {
+  background: linear-gradient(135deg, #4a90e2, #357abd);
+  color: white;
+  border: none;
+  border-radius: 2rem;
+  padding: 0.8rem 1.5rem;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.send-button:hover {
+  background: #357abd;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+/* Trạng thái online */
+.online-status {
+  color: #4caf50;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.online-dot {
+  width: 10px;
+  height: 10px;
+  background-color: #4caf50;
+  border-radius: 50%;
+  box-shadow: 0 0 5px rgba(76, 175, 80, 0.5);
+}

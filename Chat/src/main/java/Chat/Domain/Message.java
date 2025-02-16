@@ -1,36 +1,49 @@
 package Chat.Domain;
 
-import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.time.LocalDateTime;
-
-@Entity
-@Table(name = "messages")
-@Getter
-@Setter
-@AllArgsConstructor
-@NoArgsConstructor
 public class Message {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @ManyToOne
-    @JoinColumn(name = "sender_id", nullable = false)
-    private User sender;
-
-    @ManyToOne
-    @JoinColumn(name = "receiver_id", nullable = false)
-    private User receiver;
-
+    private Long senderId;
+    private String sender;
     private String text;
-    private String type;
+    private String time;
 
+    // ✅ Constructor mặc định
+    public Message() {}
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    // ✅ Constructor có annotation giúp Jackson parse JSON đúng
+    @JsonCreator
+    public Message(@JsonProperty("senderId") Long senderId,
+                   @JsonProperty("sender") String sender,
+                   @JsonProperty("text") String text,
+                   @JsonProperty("time") String time) {
+        this.senderId = senderId;
+        this.sender = sender;
+        this.text = text;
+        this.time = time;
+    }
+
+    // ✅ Getter & Setter đầy đủ
+    public Long getSenderId() { return senderId; }
+    public void setSenderId(Long senderId) { this.senderId = senderId; }
+
+    public String getSender() { return sender; }
+    public void setSender(String sender) { this.sender = sender; }
+
+    public String getText() { return text; }
+    public void setText(String text) { this.text = text; }
+
+    public String getTime() { return time; }
+    public void setTime(String time) { this.time = time; }
+
+    @Override
+    public String toString() {
+        return "Message{" +
+                "senderId=" + senderId +
+                ", sender='" + sender + '\'' +
+                ", text='" + text + '\'' +
+                ", time='" + time + '\'' +
+                '}';
+    }
 }
