@@ -32,7 +32,13 @@ public class User {
     public String getUsername() {
         return this.username;
     }
-
+    public void setStatus(Status status) {
+        this.status = status;
+    }
+    public Status getStatus()
+    {
+        return this.status;
+    }
     public Long getId(){
         return this.id;
     }
