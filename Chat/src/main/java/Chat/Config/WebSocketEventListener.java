@@ -14,6 +14,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.socket.messaging.SessionConnectedEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
+import java.sql.Time;
+import java.time.LocalTime;
+
 
 @Component
 public class WebSocketEventListener {
@@ -42,10 +45,11 @@ public class WebSocketEventListener {
             logger.info("User Disconnected : " + username);
 
             Message chatMessage = new Message();
+            chatMessage.setSender(user.getUsername());
+            chatMessage.setText(user.getUsername() + " đã rời khỏi phòng chat.");
+            chatMessage.setTime(LocalTime.now().toString());
+            messagingTemplate.convertAndSend("/topic/userLeft", chatMessage);
 
-            chatMessage.setSenderId(user.getId());
-
-            messagingTemplate.convertAndSend("/topic/public", chatMessage);
         }
     }
 }

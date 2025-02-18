@@ -156,3 +156,37 @@
   border-radius: 50%;
   box-shadow: 0 0 5px rgba(76, 175, 80, 0.5);
 }
+.online-users {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  background: #fff;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  width: 200px;
+}
+
+.online-users h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.online-users ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.online-users li {
+  padding: 5px 0;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 14px;
+}
+.user-left-message {
+  text-align: center;
+  color: #ff4d4d;
+  font-weight: bold;
+  margin: 10px 0;
+}

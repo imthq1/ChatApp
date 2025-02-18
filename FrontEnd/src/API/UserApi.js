@@ -4,12 +4,12 @@ class UserService {
 
   static async createUser(username) {
     if (!username.trim()) return { error: "Username cannot be empty" };
-
+    const status = "ONLINE";
     try {
       const response = await fetch(this.API_URL_CREATE, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username }),
+        body: JSON.stringify({ username, status }),
       });
 
       const data = await response.json();
