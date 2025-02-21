@@ -1,10 +1,16 @@
 /* Định dạng tổng thể */
 .chat-container {
-  height: 100vh;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(to right, #eef2f3, #f5f7fa);
-  font-family: "Arial", sans-serif;
+  height: 100vh;
+}
+
+.chat-messages {
+  flex-grow: 1;
+  overflow-y: auto;
+  padding: 10px;
+  display: flex;
+  flex-direction: column-reverse; /* Giúp cuộn lên đúng hướng */
 }
 
 /* Header chat */
@@ -28,15 +34,11 @@
 
 /* Khu vực tin nhắn */
 .chat-messages {
-  flex: 1;
-  padding: 1rem;
+  flex-grow: 1;
   overflow-y: auto;
+  padding: 10px;
   display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  background: #ffffff;
-  border-radius: 10px;
-  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.05);
+  flex-direction: column-reverse; /* Giúp cuộn lên đúng hướng */
 }
 
 /* Tin nhắn chung */

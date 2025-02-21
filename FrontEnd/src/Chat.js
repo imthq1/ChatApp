@@ -1,6 +1,6 @@
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useNavigate } from "react-router";
 import "./Style/Chat.css";
 import UserService from "./API/UserApi";
@@ -12,57 +12,50 @@ const Chat = () => {
   const [stompClient, setStompClient] = useState(null);
   const [onlineUsers, setOnlineUsers] = useState([]);
   const [userLeftMessages, setUserLeftMessages] = useState([]);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const observer = useRef();
 
-  // Show received messages
   function showMessage(temp) {
     setMessages((prev) => [temp.body, ...prev]);
     console.log("📩 Tin nhắn sau cập nhật:", messages);
   }
 
-  // Show updated list of online users
-  function showOnlineUsers(users) {
-    setOnlineUsers(users);
-  }
-
   useEffect(() => {
     const username = localStorage.getItem("username");
-
     if (!username) {
       navigate("/");
       return;
     }
+
+    if (stompClient) return;
 
     const socket = new SockJS("http://localhost:8080/ws");
     const client = new Client({
       webSocketFactory: () => socket,
       debug: (str) => console.log(str),
       reconnectDelay: 5000,
-      onConnect: (frame) => {
+      onConnect: () => {
         client.subscribe("/topic/public", (response) => {
           const receivedMessage = JSON.parse(response.body);
           console.log("📩 Tin nhắn nhận được:", receivedMessage);
           showMessage(receivedMessage);
         });
 
-        // Subscribe to online users list
         client.subscribe("/topic/onlineUsers", (response) => {
-          const users = JSON.parse(response.body);
-          showOnlineUsers(users);
+          setOnlineUsers(JSON.parse(response.body));
         });
 
         client.subscribe("/topic/userLeft", (response) => {
-          const userLeft = JSON.parse(response.body);
-          console.log("🚪 Người dùng rời nhóm:", userLeft);
-          setUserLeftMessages((prev) => [...prev, userLeft]);
+          setUserLeftMessages((prev) => [...prev, JSON.parse(response.body)]);
         });
 
-        // Notify server about the new user joining
         client.publish({
           destination: "/app/chat.addUser",
           body: JSON.stringify({ sender: username }),
         });
       },
-      onStompError: (frame) => {},
     });
 
     client.activate();
@@ -76,41 +69,70 @@ const Chat = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const username = localStorage.getItem("username");
-    if (!username) {
-      console.error("Username is required.");
+    if (!username || !stompClient || !stompClient.connected) return;
+
+    // Kiểm tra nếu tin nhắn rỗng (chỉ chứa dấu cách)
+    if (!newMessage.trim()) {
+      alert("Tin nhắn không được để trống!");
       return;
     }
 
     const result = await UserService.getId(username);
+    if (result.error) return;
+
+    const message = {
+      senderId: result.user,
+      sender: username,
+      text: newMessage.trim(),
+      time: new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+    };
+
+    stompClient.publish({
+      destination: "/app/chat.sendMessage",
+      body: JSON.stringify(message),
+    });
+
+    setMessages((prevMessages) => [...prevMessages, message]);
+    setNewMessage(""); // Xóa input sau khi gửi
+  };
+
+  const loadMessages = async () => {
+    if (!hasMore || loading) return; // Chặn nếu đã tải hết hoặc đang tải
+    setLoading(true);
+
+    console.log("Đang tải tin nhắn...");
+    const result = await UserService.getMessages(page);
+    console.log("Result", result);
     if (result.error) {
       console.error(result.error);
+      setLoading(false);
       return;
     }
 
-    if (newMessage.trim() && stompClient && stompClient.connected && result) {
-      const message = {
-        senderId: result.user,
-        sender: username,
-        text: newMessage,
-        time: new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-      };
-
-      console.log("🚀 JSON gửi lên:", JSON.stringify(message));
-
-      stompClient.publish({
-        destination: "/app/chat.sendMessage",
-        body: JSON.stringify(message),
-      });
-
-      setNewMessage("");
-    } else {
-      console.error("❌ STOMP connection is not established.");
-    }
+    setMessages((prev) => [...prev, ...result.messages]);
+    setPage((prev) => prev + 1);
+    setHasMore(result.hasMore);
+    setLoading(false);
   };
 
+  const lastMessageRef = useCallback(
+    (node) => {
+      if (loading || !hasMore) return;
+      if (observer.current) observer.current.disconnect();
+
+      observer.current = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting) {
+          loadMessages(); // Gọi API khi cuộn xuống
+        }
+      });
+
+      if (node) observer.current.observe(node);
+    },
+    [loading, hasMore]
+  );
   return (
     <div className="chat-container">
       <div className="chat-header">
@@ -121,11 +143,10 @@ const Chat = () => {
         </div>
       </div>
 
-      {/* Sidebar for online users */}
       <div className="online-users">
         <h3>Online Users</h3>
         <ul>
-          {Array.isArray(onlineUsers) && onlineUsers.length > 0 ? (
+          {onlineUsers.length > 0 ? (
             onlineUsers.map((user, index) => <li key={index}>{user}</li>)
           ) : (
             <li>Không có ai online</li>
@@ -134,36 +155,29 @@ const Chat = () => {
       </div>
 
       <div className="chat-messages">
-        {/* 🛑 Hiển thị danh sách người rời nhóm */}
         {userLeftMessages.map((user, index) => (
           <div key={index} className="user-left-message">
             🚪 <b>{user.sender}</b> đã rời nhóm
           </div>
         ))}
-
-        {/* 📨 Hiển thị tin nhắn chat */}
-        {messages.map((msg, index) => {
-          if (!msg || typeof msg !== "object") {
-            console.warn("❗ Tin nhắn không hợp lệ:", msg);
-            return null;
-          }
-
-          return (
-            <div
-              key={index}
-              className={`message ${
-                msg.sender === localStorage.getItem("username")
-                  ? "message-sent"
-                  : "message-received"
-              }`}
-            >
+        {messages.map((msg, index) => (
+          <div
+            ref={index === messages.length - 1 ? lastMessageRef : null}
+            key={index}
+            className={`message ${
+              msg.sender === localStorage.getItem("username")
+                ? "message-sent"
+                : "message-received"
+            }`}
+          >
+            {msg.sender && msg.time && (
               <div className="message-info">
-                <b>{msg.sender || "Ẩn danh"}</b> • {msg.time || "N/A"}
+                <b>{msg.sender}</b> • {msg.time}
               </div>
-              {msg.text && <div className="message-text">{msg.text}</div>}
-            </div>
-          );
-        })}
+            )}
+            {msg.text && <div className="message-text">{msg.text}</div>}
+          </div>
+        ))}
       </div>
 
       <div className="chat-input-container">
@@ -175,7 +189,11 @@ const Chat = () => {
             onChange={(e) => setNewMessage(e.target.value)}
             placeholder="Type a message..."
           />
-          <button type="submit" className="send-button">
+          <button
+            type="submit"
+            className="send-button"
+            disabled={!newMessage.trim()}
+          >
             Send
           </button>
         </form>
