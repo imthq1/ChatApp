@@ -22,18 +22,21 @@ public class ChatService {
         return chatRespository.save(message);
     }
     public Map<String, Object> findAll(int page) {
-        int pageSize = 20; // Số lượng tin nhắn mỗi trang
+        int pageSize = 20;
         Pageable pageable = PageRequest.of(page, pageSize, Sort.by("time").descending());
 
         List<Message> messages = chatRespository.findAll(pageable).getContent();
 
-        boolean hasMore = messages.size() == pageSize; // Kiểm tra nếu có thêm tin nhắn
+        boolean hasMore = messages.size() == pageSize;
 
         Map<String, Object> response = new HashMap<>();
         response.put("messages", messages);
-        response.put("hasMore", hasMore); // Trả về biến này để kiểm soát trên frontend
+        response.put("hasMore", hasMore);
 
         return response;
+    }
+    public List<Message> getPrivateMessages(String user1, String user2) {
+        return this.chatRespository.findBySenderAndReceiverOrReceiverAndSender(user1, user2, user1, user2);
     }
 
 }

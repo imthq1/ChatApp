@@ -1,5 +1,6 @@
 package Chat.Service;
 
+import Chat.Domain.Request.UserDTO;
 import Chat.Domain.User;
 import Chat.Repository.UserRepository;
 
@@ -11,8 +12,10 @@ public class UserService {
     public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
-    public User save(User user) {
-
+    public User save(UserDTO userDTO) {
+            User user = new User();
+            user.setUsername(userDTO.getUsername());
+            user.setPassword(userDTO.getPassword());
         return this.userRepository.save(user);
     }
 }

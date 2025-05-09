@@ -15,4 +15,5 @@ public interface UserRepository extends JpaRepository<User, Integer>, JpaSpecifi
     User save(User user);
     User findByUsername(String username);
     Page<User> findAll(Pageable pageable);
+    boolean existsByUsernameAndPassword(String username, String password);
 }
