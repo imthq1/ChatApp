@@ -23,8 +23,10 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Enumerated(EnumType.STRING)  // Lưu status dưới dạng chuỗi ("ONLINE", "OFFLINE")
+    @Enumerated(EnumType.STRING)
     private Status status;
+
+    private String password;
 
     @Column(unique = true, nullable = false)
     private String username;
