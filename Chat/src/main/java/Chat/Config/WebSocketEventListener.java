@@ -15,6 +15,7 @@ import org.springframework.web.socket.messaging.SessionConnectedEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
 import java.sql.Time;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 
@@ -47,7 +48,7 @@ public class WebSocketEventListener {
             Message chatMessage = new Message();
             chatMessage.setSender(user.getUsername());
             chatMessage.setText(user.getUsername() + " đã rời khỏi phòng chat.");
-            chatMessage.setTime(LocalTime.now().toString());
+            chatMessage.setTime(LocalDateTime.now());
             messagingTemplate.convertAndSend("/topic/userLeft", chatMessage);
 
         }
