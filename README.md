@@ -25,14 +25,6 @@ A modern, real-time chat application built with **Spring Boot** and **React**, l
 - **WebSocket Client**: SockJS and STOMP.js
 - **Styling**: CSS with responsive design
 
-## Prerequisites
-
-Before setting up the project, ensure you have the following installed:
-- **Java**: JDK 17 or later
-- **Node.js**: Version 18.x or later
-- **PostgreSQL**: Version 13 or later
-- **Maven**: For building the backend
-- **npm**: For managing frontend dependencies
 
 ## Getting Started
 
