@@ -1,8 +1,8 @@
-# 💬 Real-time Chat Application
+# Real-time Chat Application
 
 A modern, real-time chat application built with Spring Boot and React, featuring WebSocket communication for instant messaging.
 
-## ✨ Features
+## Features
 
 - Real-time messaging using WebSocket protocol
 - Paginated chat history
@@ -10,7 +10,7 @@ A modern, real-time chat application built with Spring Boot and React, featuring
 - Online/offline user status
 
 
-## 🛠 Technology Stack
+## Technology Stack
 
 ### Backend
 - **Framework:** Spring Boot
@@ -22,12 +22,7 @@ A modern, real-time chat application built with Spring Boot and React, featuring
 - **State Management:** Redux/Context API
 - **WebSocket Client:** SockJS/STOMP.js
 
-## 📋 Prerequisites
-- Java 17 
-- PostgreSQL
-- Maven/Gradle
-
-## 🚀 Getting Started
+## Getting Started
 
 ### Backend Setup
 
@@ -67,7 +62,7 @@ npm run dev
 ```
 
 
-## 📸 Screenshots
+##  Screenshots
 
 ![image](https://github.com/user-attachments/assets/1588087c-15a9-4200-9aa2-906b0d372d92)
 
