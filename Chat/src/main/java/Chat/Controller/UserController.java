@@ -1,6 +1,7 @@
 package Chat.Controller;
 
 import Chat.Domain.Message;
+import Chat.Domain.Request.UserDTO;
 import Chat.Domain.User;
 import Chat.Repository.UserRepository;
 import Chat.Service.ChatService;
@@ -17,8 +18,10 @@ import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -29,7 +32,7 @@ public class UserController {
     private final UserService userService;
     private final UserRepository userRepository;
     private final ChatService chatService;
-    private final Set<String> onlineUsers = ConcurrentHashMap.newKeySet(); // Set để lưu trữ người dùng online
+    private final Set<String> onlineUsers = ConcurrentHashMap.newKeySet();
 
     private final SimpMessagingTemplate messagingTemplate;
 
@@ -41,24 +44,30 @@ public class UserController {
     }
 
     @PostMapping("/create")
-    public ResponseEntity<?> createUser(@RequestBody User user) {
-        User existingUser = userRepository.findByUsername(user.getUsername());
+    public ResponseEntity<?> createUser(@RequestBody UserDTO user) {
+            if(this.userRepository.findByUsername(user.getUsername()) != null) {
+                return ResponseEntity.badRequest().body("Username already exists");
+            }
 
-        if (existingUser!=null) {
-            User updatedUser = existingUser;
-            updatedUser.setStatus(user.getStatus());
-            userService.save(updatedUser);
-            return ResponseEntity.ok(updatedUser);
-        } else {
             User savedUser = userService.save(user);
             return ResponseEntity.ok(savedUser);
-        }
+
     }
+
     @GetMapping("/getAllUser")
     public ResponseEntity<?> getAllUser(Pageable pageable) {
         Page<User> users = userRepository.findAll(pageable);
 
         return ResponseEntity.ok(users);
+    }
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody UserDTO user) {
+        if(this.userRepository.existsByUsernameAndPassword(user.getUsername(), user.getPassword())) {
+            return ResponseEntity.ok(user);
+        }
+        else{
+            return ResponseEntity.badRequest().body("Username or password is incorrect");
+        }
     }
     @GetMapping("/getUser")
     public ResponseEntity<?> getUser(@RequestParam(name = "username") String username) {
@@ -67,26 +76,61 @@ public class UserController {
     }
 
     @MessageMapping("/chat.sendMessage")
-    @SendTo("/topic/public")
-    public ResponseEntity<?> sendMessage(@Payload Message message ) {
+    public void sendMessage(@Payload Message message) {
         System.out.println("📩 Received message: " + message);
-        this.chatService.save(message);
-        return ResponseEntity.ok().body(message);
+        chatService.save(message);
+
+        if (message.isPrivate()) {
+            if (message.getReceiver() != null) {
+                System.out.println("📤 Sending private message to receiver: /user/" + message.getReceiver() + "/queue/messages");
+                messagingTemplate.convertAndSend("/user/" + message.getReceiver() + "/queue/messages", message);
+            } else {
+                System.out.println("⚠️ Receiver is null for private message");
+            }
+            if (message.getSender() != null) {
+                System.out.println("📤 Sending private message to sender: /user/" + message.getSender() + "/queue/messages");
+                messagingTemplate.convertAndSend("/user/" + message.getSender() + "/queue/messages", message);
+            } else {
+                System.out.println("⚠️ Sender is null for private message");
+            }
+        } else {
+            System.out.println("📤 Sending public message to /topic/public");
+            messagingTemplate.convertAndSend("/topic/public", message);
+        }
     }
+
 
     @MessageMapping("/chat.addUser")
-    @SendTo("/topic/public")
-    public ResponseEntity<Message> addUser(@Payload Message chatMessage, SimpMessageHeaderAccessor headerAccessor) {
-        // Add username in web socket session
-        headerAccessor.getSessionAttributes().put("username", chatMessage.getSender());
+    public void addUser(@Payload Map<String, String> payload, SimpMessageHeaderAccessor headerAccessor) {
+        String username = payload.get("username");
+        System.out.println("📥 Received addUser payload: " + payload);
+        if (username != null) {
+            headerAccessor.getSessionAttributes().put("username", username);
+            onlineUsers.add(username);
 
-        onlineUsers.add(chatMessage.getSender());
+            System.out.println("📤 Sending onlineUsers: " + onlineUsers);
+            messagingTemplate.convertAndSend("/topic/onlineUsers", onlineUsers);
 
-        // Gửi danh sách online users đến tất cả các client
-        messagingTemplate.convertAndSend("/topic/onlineUsers", onlineUsers);
+            Message systemMessage = new Message();
+            systemMessage.setSender("System");
+            systemMessage.setText(username + " has joined the chat");
+            systemMessage.setTime(LocalDateTime.now());
+            systemMessage.setPrivate(false);
 
-
-        return ResponseEntity.ok(chatMessage);
+            System.out.println("📤 Sending system message: " + systemMessage);
+            messagingTemplate.convertAndSend("/topic/public", systemMessage);
+        } else {
+            System.out.println("⚠️ Username is null in addUser payload");
+        }
     }
+    @GetMapping("/messages/private")
+    public ResponseEntity<?> getPrivateMessages(
+            @RequestParam String user1,
+            @RequestParam String user2
+    ) {
+        List<Message> messages = chatService.getPrivateMessages(user1, user2);
+        return ResponseEntity.ok(messages);
+    }
+
 
 }
